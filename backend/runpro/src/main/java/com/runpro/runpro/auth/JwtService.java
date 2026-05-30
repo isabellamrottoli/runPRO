@@ -27,7 +27,12 @@ public class JwtService {
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiration-hours:24}") long expirationHours
     ) {
-        this.key = secret.getBytes(StandardCharsets.UTF_8);
+        byte[] secretBytes = secret == null ? new byte[0] : secret.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < 32) {
+            throw new IllegalStateException(
+                    "app.jwt.secret must be at least 32 bytes. Set a strong secret via the APP_JWT_SECRET environment variable.");
+        }
+        this.key = secretBytes;
         this.expirationSeconds = expirationHours * 3600L;
     }
 
@@ -51,6 +56,14 @@ public class JwtService {
         if (token == null) return Optional.empty();
         String[] parts = token.split("\\.");
         if (parts.length != 3) return Optional.empty();
+
+        String headerJson;
+        try {
+            headerJson = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+        if (!"HS256".equals(extract(headerJson, "alg"))) return Optional.empty();
 
         String signingInput = parts[0] + "." + parts[1];
         byte[] expected = hmacSha256(signingInput.getBytes(StandardCharsets.UTF_8));
@@ -113,7 +126,6 @@ public class JwtService {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
-    // naive JSON field extractor — works because we control the token shape
     private static String extract(String json, String field) {
         String quoted = "\"" + field + "\":";
         int i = json.indexOf(quoted);

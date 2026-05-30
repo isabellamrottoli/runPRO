@@ -2,6 +2,7 @@ package com.runpro.runpro.seed;
 
 import com.runpro.runpro.domain.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Component
+@Profile("dev")
 public class DevDataSeeder implements CommandLineRunner {
 
     private static final String DEMO_PASSWORD = "s3nha123";
@@ -69,7 +71,6 @@ public class DevDataSeeder implements CommandLineRunner {
         seedWeekFor(ana, coach, advisory);
         seedWeekFor(bruno, coach, advisory);
 
-        // Pending join request from Carla
         save(joinRequests, build(new JoinRequest(), jr -> {
             jr.setAthlete(carla);
             jr.setCoach(coach);
@@ -77,7 +78,6 @@ public class DevDataSeeder implements CommandLineRunner {
             jr.setStatus(JoinRequestStatus.PENDING);
         }));
 
-        // Next race goal (for coach home "Próxima corrida")
         save(goals, raceGoal(ana, coach, advisory, 5.0));
         save(goals, raceGoal(bruno, coach, advisory, 10.0));
     }

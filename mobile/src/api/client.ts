@@ -5,16 +5,15 @@ import { useAuthStore } from '../store/auth';
 const BACKEND_PORT = 8080;
 
 function resolveBaseURL(): string {
-  // 1) Expo/Metro exposes the dev machine's LAN host in scriptURL.
-  //    Works on Android emulator, iOS simulator AND physical devices
-  //    connected to the same WiFi as the PC — no hardcoded IP needed.
+  const configured = process.env.EXPO_PUBLIC_API_URL;
+  if (configured) return configured.replace(/\/+$/, '');
+
   const scriptURL: string | undefined = NativeModules?.SourceCode?.scriptURL;
   if (scriptURL) {
     const match = scriptURL.match(/^https?:\/\/([^/:]+)(?::\d+)?/);
     if (match) return `http://${match[1]}:${BACKEND_PORT}`;
   }
 
-  // 2) Fallbacks for edge cases.
   if (Platform.OS === 'android') return `http://10.0.2.2:${BACKEND_PORT}`;
   return `http://localhost:${BACKEND_PORT}`;
 }
@@ -79,8 +78,6 @@ export async function signupAthlete(payload: AthleteSignupPayload): Promise<Logi
   return data;
 }
 
-// ============ Coach ============
-
 export type Advisory = {
   id: string;
   name: string;
@@ -124,8 +121,6 @@ export async function fetchAthletes(): Promise<AthleteListItem[]> {
   const { data } = await api.get<AthleteListItem[]>('/api/coach/athletes');
   return data;
 }
-
-// ============ Runner ============
 
 export type WorkoutType = 'RUNNING' | 'STRENGTH';
 export type WorkoutStatus = 'PENDING' | 'COMPLETED' | 'MISSED';

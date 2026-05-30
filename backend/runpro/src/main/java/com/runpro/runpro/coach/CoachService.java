@@ -73,7 +73,6 @@ public class CoachService {
     public List<CoachDtos.AthleteListItemDto> listAthletes(UUID coachId) {
         User coach = requireCoach(coachId);
         UUID advisoryId = coach.getAdvisory().getId();
-        // Races are longer-horizon goals. Skip the current weekly goal.
         LocalDate raceFrom = LocalDate.now().plusDays(8);
         LocalDate farFuture = raceFrom.plusYears(5);
 
